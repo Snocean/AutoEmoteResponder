@@ -1,0 +1,8 @@
+## Interface: 11500
+## Title: Auto Emote Responder
+## Notes: Responds automatically to certain emotes directed at the player.
+## Author: EffinOwen
+## Version: 1.0
+## SavedVariables: AutoEmoteResponderSettings
+
+AutoEmoteResponder.lua
