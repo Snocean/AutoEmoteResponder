@@ -154,6 +154,7 @@ local search = {
 	SIGH="sighs",
 	SILLY="joke.",
 	SLAP="slaps",
+	SMACK="smacks",
 	SMELL="smells",
 	SMILE="smiles at",
 	SMIRK="smirks",
@@ -212,7 +213,7 @@ table.sort(sortedEmoteKeys)
 
 function AutoEmoteResponder_CreateOptionsFrame()
     local OptionsFrame = CreateFrame("Frame", "AutoEmoteResponderOptionsFrame", UIParent, "BasicFrameTemplateWithInset")
-    OptionsFrame:SetSize(310, 400)  -- Adjust height as needed
+    OptionsFrame:SetSize(460, 500)  -- Adjust height as needed
     OptionsFrame:SetPoint("CENTER", 0, 100)
     OptionsFrame:SetMovable(true)
     OptionsFrame:EnableMouse(true)
@@ -227,7 +228,7 @@ function AutoEmoteResponder_CreateOptionsFrame()
     OptionsFrame.title:SetText("Auto Emote Responder Options Window")
 
     local OptionsScrollFrame = CreateFrame("ScrollFrame", "AutoEmoteResponderOptionsScrollFrame", OptionsFrame, "UIPanelScrollFrameTemplate")
-    OptionsScrollFrame:SetSize(270, 360)
+    OptionsScrollFrame:SetSize(420, 460)
     OptionsScrollFrame:SetPoint("TOP", OptionsFrame, "TOP", -10, -30)
 
 -- Define tableLength function
@@ -242,7 +243,7 @@ function AutoEmoteResponder_CreateOptionsFrame()
 -- Scroll child frame where elements are actually placed
 	local ScrollChild = CreateFrame("Frame")
 	local totalHeight = 30 * tableLength(search)
-	ScrollChild:SetSize(280, totalHeight)  -- Adjust height based on the number of elements
+	ScrollChild:SetSize(430, totalHeight)  -- Adjust height based on the number of elements
 	OptionsScrollFrame:SetScrollChild(ScrollChild)
 
 -- Create headers
@@ -261,7 +262,7 @@ function AutoEmoteResponder_CreateOptionsFrame()
 
 -- Create Emotes within Options Frame
 local yOffset = -25
-local responseEmoteWidth = 80  -- Width of the responseEmote EditBox
+local responseEmoteWidth = 250  -- Width of the responseEmote EditBox
 local checkBoxWidth = 30  -- Approximate width of the CheckButton (adjust as needed)
 
 
@@ -276,7 +277,7 @@ for _, emote in ipairs(sortedEmoteKeys) do
     -- Response Emote EditBox
     local responseEmote = CreateFrame("EditBox", nil, ScrollChild, "InputBoxTemplate")
     responseEmote:SetSize(responseEmoteWidth, 20)
-    responseEmote:SetPoint("TOP", ScrollChild, "TOP", 0, yOffset + 5)
+    responseEmote:SetPoint("TOP", ScrollChild, "TOP", 25, yOffset + 5)
     responseEmote:SetAutoFocus(false)
     responseEmote:SetScript("OnEnterPressed", function(self)
         AutoEmoteResponderSettings[emote] = self:GetText()
@@ -348,8 +349,7 @@ end)
 -- Slash Command Registration
 SLASH_AUTOEMOTES1 = "/autoemote"
 SLASH_AUTOEMOTES2 = "/ae"
-
-SlashCmdList["AUTOEMOTERESPONDER"] = nil
+SLASH_AUTOEMOTESTEST1 = "/aeme"
 
 SlashCmdList["AUTOEMOTES"] = function(msg)
     if AutoEmoteResponderOptionsFrame:IsShown() then
@@ -360,6 +360,14 @@ SlashCmdList["AUTOEMOTES"] = function(msg)
     end
 end
 
+SlashCmdList["AUTOEMOTESTEST"] = function(msg)
+    AutoEmoteResponderTest()
+end
+
+function AutoEmoteResponderTest()
+	SendChatMessage("is testing things", "EMOTE", nil)
+end
+
 
 -- Event handler function for responding to emotes
 function AutoEmoteResponder_OnEvent(self, event, msg, player, ...)
@@ -368,7 +376,7 @@ function AutoEmoteResponder_OnEvent(self, event, msg, player, ...)
 		local msg1 = args[1]
 		local sender = player
 		local misc = args[3]
-
+		local meCheck = "me"
         local playerName = UnitName("player")
 
         -- Check for matching Emote
@@ -377,10 +385,22 @@ function AutoEmoteResponder_OnEvent(self, event, msg, player, ...)
                 if string.find(msg, emoteString, 1, true) then
                     local responseEmote = AutoEmoteResponderSettings[emoteKey]
                     if responseEmote then
-						if AutoEmoteResponderSettings[emoteKey .. "TargetSender"] then
-                        DoEmote(responseEmote,sender)
+						if string.find(responseEmote, "me", 1, true) then
+							local meResponse = string.sub(responseEmote, 3, -1)
+							if AutoEmoteResponderSettings[emoteKey .. "TargetSender"] then
+								local meResponseSender = meResponse
+								local mePlayer = {}
+								meResponseSender = string.gsub(meResponseSender, "PLAYER", function(mePlayer2) table.insert(mePlayer, mePlayer2) return sender end)
+								SendChatMessage(meResponseSender, "EMOTE", nil)
+							else
+							SendChatMessage(meResponse, "EMOTE", nil)
+							end
+						elseif AutoEmoteResponderSettings[emoteKey .. "TargetSender"] then
+							print(responseEmote .. " sender found")
+							DoEmote(responseEmote,sender)
 						else
-						DoEmote(responseEmote,"none")
+							print(responseEmote .. " no target found")
+							DoEmote(responseEmote,"none")
 						end
 					break
 					end
