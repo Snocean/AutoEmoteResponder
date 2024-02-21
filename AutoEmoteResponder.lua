@@ -141,7 +141,7 @@ local search = {
 	ROLLEYES="eyes at",
 	RUDE="rude",
 	SAD="NOTARGET",
-	SALUTE="salutes",
+	SALUTE="respect",
 	SCARED="scared",
 	SCRATCH="scratch",
 	SERIOUS="serious.",
@@ -338,18 +338,17 @@ AutoEmoteResponder.frame:RegisterEvent("CHAT_MSG_TEXT_EMOTE")
 AutoEmoteResponder.frame:RegisterEvent("ADDON_LOADED")
 
 -- Event handler function
-AutoEmoteResponder.frame:SetScript("OnEvent", function(self, event, msg, player, arg1, arg2, ...)
+AutoEmoteResponder.frame:SetScript("OnEvent", function(self, event, msg, player, ...)
     if event == "ADDON_LOADED" and arg1 == "AutoEmoteResponder" then
         OnAddonLoaded()
     elseif event == "CHAT_MSG_TEXT_EMOTE" then
-        AutoEmoteResponder_OnEvent(self, event, msg, player, arg1, arg2, ...)
+        AutoEmoteResponder_OnEvent(self, event, msg, player, ...)
     end
 end)
 
 -- Slash Command Registration
 SLASH_AUTOEMOTES1 = "/autoemote"
 SLASH_AUTOEMOTES2 = "/ae"
-SLASH_AUTOEMOTESTEST1 = "/aeme"
 
 SlashCmdList["AUTOEMOTES"] = function(msg)
     if AutoEmoteResponderOptionsFrame:IsShown() then
@@ -360,29 +359,20 @@ SlashCmdList["AUTOEMOTES"] = function(msg)
     end
 end
 
-SlashCmdList["AUTOEMOTESTEST"] = function(msg)
-    AutoEmoteResponderTest()
-end
-
-function AutoEmoteResponderTest()
-	SendChatMessage("is testing things", "EMOTE", nil)
-end
-
 
 -- Event handler function for responding to emotes
 function AutoEmoteResponder_OnEvent(self, event, msg, player, ...)
+
     if event == "CHAT_MSG_TEXT_EMOTE" then
-        local args = {...}
-		local msg1 = args[1]
 		local sender = player
-		local misc = args[3]
-		local meCheck = "me"
+		local msg = msg
         local playerName = UnitName("player")
+		local modifiedMsg = string.gsub(msg, sender, "")
 
         -- Check for matching Emote
-		if (string.find(msg, "you", 1, true) or string.find(msg, playerName, 1, true) or string.find(msg, "your", 1, true)) then
+		if (string.find(modifiedMsg, " you", 1, true) or string.find(modifiedMsg, playerName, 1, true) or string.find(modifiedMsg, " your", 1, true)) then
             for emoteKey, emoteString in pairs(search) do
-                if string.find(msg, emoteString, 1, true) then
+                if string.find(modifiedMsg, emoteString, 1, true) then
                     local responseEmote = AutoEmoteResponderSettings[emoteKey]
                     if responseEmote then
 						if string.find(responseEmote, "me", 1, true) then
@@ -396,10 +386,8 @@ function AutoEmoteResponder_OnEvent(self, event, msg, player, ...)
 							SendChatMessage(meResponse, "EMOTE", nil)
 							end
 						elseif AutoEmoteResponderSettings[emoteKey .. "TargetSender"] then
-							print(responseEmote .. " sender found")
 							DoEmote(responseEmote,sender)
 						else
-							print(responseEmote .. " no target found")
 							DoEmote(responseEmote,"none")
 						end
 					break
@@ -408,7 +396,7 @@ function AutoEmoteResponder_OnEvent(self, event, msg, player, ...)
 			end
 		end
 	end
-end
+end --
 
 
 function RefreshOptionsFrame()
